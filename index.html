@@ -24,7 +24,7 @@
       <button id="configBtn" onclick="toggleConfig()" class="text-xs font-medium text-slate-500 hover:text-slate-800 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 transition">⚙️ Ustawienia API</button>
     </div>
 
-    <!-- Baner powiadomień o błędach -->
+    <!-- Baner Błędów -->
     <div id="errorBanner" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium"></div>
 
     <!-- Panel Konfiguracji URL -->
@@ -44,58 +44,69 @@
           <span class="text-xs font-bold text-slate-400">Krok 1 z 3</span>
         </div>
         
-        <div class="space-y-4">
+        <div class="space-y-3">
           <div>
             <label class="block text-xs font-medium text-slate-600 mb-1">Data wpisu (domyślnie dzisiaj)*</label>
-            <input type="date" id="data_wpisu" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
+            <input type="date" id="data_wpisu" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
           </div>
           
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Pójście do łóżka*</label>
-              <input type="time" id="godzina_bed" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
+              <label class="block text-xs font-medium text-slate-600 mb-1">1. Pójście do łóżka*</label>
+              <input type="time" id="godzina_bed" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Wstanie z łóżka*</label>
-              <input type="time" id="godzina_wstania" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Czas do zgaszenia (min)</label>
-              <input type="number" id="czas_zgaszenie" placeholder="np. 15" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Czas zasypiania (min)</label>
-              <input type="number" id="czas_zasypianie" placeholder="np. 30" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
+              <label class="block text-xs font-medium text-slate-600 mb-1">2. Zgaszenie światła*</label>
+              <input type="time" id="godzina_zgaszenia" onchange="calculateSleep()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Trudne przebudzenia</label>
-              <input type="number" id="trudne_przebudzenia" min="0" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
+              <label class="block text-xs font-medium text-slate-600 mb-1">3. Czas zasypiania (min)</label>
+              <input type="number" id="czas_zasypianie" placeholder="0" oninput="calculateSleep()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Łączny czas wybudzeń (min)</label>
-              <input type="number" id="laczny_czas_przebudzen" placeholder="np. 10" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
+              <label class="block text-xs font-medium text-slate-600 mb-1">4. Trudne przebudzenia</label>
+              <input type="number" id="trudne_przebudzenia" min="0" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Leżenie rano (min)</label>
-              <input type="number" id="czas_lezania_rano" placeholder="np. 20" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
+              <label class="block text-xs font-medium text-slate-600 mb-1">5. Łączny czas wybudzeń (min)</label>
+              <input type="number" id="laczny_czas_przebudzen" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Drzemki w dzień (min)</label>
-              <input type="number" id="drzemki" min="0" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
+              <label class="block text-xs font-medium text-slate-600 mb-1">6. Leżenie rano (min)</label>
+              <input type="number" id="czas_lezania_rano" placeholder="0" oninput="calculateSleep()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">7. Godzina wstania z łóżka*</label>
+            <input type="time" id="godzina_wstania" onchange="calculateSleep()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
+          </div>
+
+          <!-- Automatyczny Przelicznik Snu -->
+          <div class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl flex justify-between items-center">
+            <span class="text-xs font-semibold text-indigo-900">Obliczony czysty czas snu:</span>
+            <span id="calculatedSleepText" class="text-xs font-bold text-indigo-700">-- h -- min</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">8. Drzemki (ilość)</label>
+              <input type="number" id="drzemki_ilosc" min="0" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">9. Drzemki (długość w min)</label>
+              <input type="number" id="drzemki_dlugosc" min="0" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
             </div>
           </div>
         </div>
 
-        <button type="button" onclick="validateAndNext(1, 2)" class="w-full mt-6 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3.5 rounded-xl transition">Dalej &rarr;</button>
+        <button type="button" onclick="validateAndNext(1, 2)" class="w-full mt-5 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3.5 rounded-xl transition">Dalej &rarr;</button>
       </div>
 
       <!-- Krok 2: Subiektywne Oceny -->
@@ -167,8 +178,9 @@
             <input type="text" id="uzywki" value="Nie" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
           </div>
 
+          <!-- Moduł Leków z Edycją -->
           <div>
-            <label class="block text-xs font-medium text-slate-600 mb-2">Środki nasenne (zaznacz lub dodaj)</label>
+            <label class="block text-xs font-medium text-slate-600 mb-2">Środki nasenne (zaznacz, edytuj lub dodaj)</label>
             <div id="medsContainer" class="flex flex-wrap gap-2 mb-2"></div>
             
             <div class="flex gap-2">
@@ -211,18 +223,32 @@
       const container = document.getElementById('medsContainer');
       container.innerHTML = '';
 
-      userMeds.forEach(med => {
+      userMeds.forEach((med, index) => {
         const isSelected = selectedMeds.has(med.name);
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
-          isSelected 
-            ? 'bg-slate-800 text-white border-slate-800 shadow-sm' 
-            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-200'
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = `flex items-center gap-1 border rounded-lg px-2.5 py-1 transition ${
+          isSelected ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-200'
         }`;
-        btn.innerText = med.name;
-        btn.onclick = () => toggleMed(med.name);
-        container.appendChild(btn);
+
+        const labelBtn = document.createElement('button');
+        labelBtn.type = 'button';
+        labelBtn.className = 'text-xs font-medium';
+        labelBtn.innerText = med.name;
+        labelBtn.onclick = () => toggleMed(med.name);
+
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = `text-[10px] opacity-60 hover:opacity-100 ml-1 ${isSelected ? 'text-slate-200' : 'text-slate-500'}`;
+        editBtn.innerText = '✏️';
+        editBtn.onclick = (e) => {
+          e.stopPropagation();
+          editMed(index);
+        };
+
+        wrapper.appendChild(labelBtn);
+        wrapper.appendChild(editBtn);
+        container.appendChild(wrapper);
       });
     }
 
@@ -232,6 +258,30 @@
       } else {
         selectedMeds.add(medName);
       }
+      renderMeds();
+    }
+
+    function editMed(index) {
+      const oldName = userMeds[index].name;
+      const newName = prompt("Edytuj nazwę leku (zostaw puste, aby usunąć):", oldName);
+      
+      if (newName === null) return; // Anulowano
+      
+      const trimmed = newName.trim();
+      if (trimmed === "") {
+        // Usuwanie leku
+        userMeds.splice(index, 1);
+        selectedMeds.delete(oldName);
+      } else {
+        // Edycja nazwy
+        userMeds[index].name = trimmed;
+        if (selectedMeds.has(oldName)) {
+          selectedMeds.delete(oldName);
+          selectedMeds.add(trimmed);
+        }
+      }
+      
+      localStorage.setItem('user_meds', JSON.stringify(userMeds));
       renderMeds();
     }
 
@@ -245,6 +295,40 @@
         input.value = '';
         renderMeds();
       }
+    }
+
+    function calculateSleep() {
+      const zgaszenie = document.getElementById('godzina_zgaszenia').value;
+      const wstanie = document.getElementById('godzina_wstania').value;
+      const zasypianie = parseFloat(document.getElementById('czas_zasypianie').value) || 0;
+      const lezenie = parseFloat(document.getElementById('czas_lezania_rano').value) || 0;
+
+      const output = document.getElementById('calculatedSleepText');
+
+      if (!zgaszenie || !wstanie) {
+        output.innerText = "-- h -- min";
+        return "";
+      }
+
+      const [h1, m1] = zgaszenie.split(':').map(Number);
+      const [h2, m2] = wstanie.split(':').map(Number);
+
+      let t1 = h1 * 60 + m1;
+      let t2 = h2 * 60 + m2;
+
+      if (t2 <= t1) t2 += 24 * 60; // Przejście przez północ
+
+      let totalInBed = t2 - t1;
+      let actualSleep = totalInBed - zasypianie - lezenie;
+
+      if (actualSleep < 0) actualSleep = 0;
+
+      const hours = Math.floor(actualSleep / 60);
+      const minutes = Math.round(actualSleep % 60);
+
+      const resultText = `${hours} h ${minutes} min`;
+      output.innerText = resultText;
+      return resultText;
     }
 
     renderMeds();
@@ -291,7 +375,7 @@
       let errorMsg = '';
 
       if (currentStep === 1) {
-        const fields = ['data_wpisu', 'godzina_bed', 'godzina_wstania'];
+        const fields = ['data_wpisu', 'godzina_bed', 'godzina_zgaszenia', 'godzina_wstania'];
         fields.forEach(id => {
           const el = document.getElementById(id);
           if (!el.value) {
@@ -303,7 +387,7 @@
         });
 
         if (!isValid) {
-          errorMsg = 'Uzupełnij datę oraz PEŁNE godziny pójścia do łóżka i wstania (wraz z minutami).';
+          errorMsg = 'Uzupełnij datę oraz PEŁNE godziny pójścia do łóżka, zgaszenia światła i wstania.';
         }
       }
 
@@ -371,13 +455,15 @@
       const formData = {
         data_wpisu: document.getElementById('data_wpisu').value,
         godzina_bed: document.getElementById('godzina_bed').value,
+        godzina_zgaszenia: document.getElementById('godzina_zgaszenia').value,
+        czas_zasypianie: document.getElementById('czas_zasypianie').value || 0,
+        trudne_przebudzenia: document.getElementById('trudne_przebudzenia').value || 0,
+        laczny_czas_przebudzen: document.getElementById('laczny_czas_przebudzen').value || 0,
+        czas_lezania_rano: document.getElementById('czas_lezania_rano').value || 0,
         godzina_wstania: document.getElementById('godzina_wstania').value,
-        czas_zgaszenie: document.getElementById('czas_zgaszenie').value,
-        czas_zasypianie: document.getElementById('czas_zasypianie').value,
-        trudne_przebudzenia: document.getElementById('trudne_przebudzenia').value,
-        laczny_czas_przebudzen: document.getElementById('laczny_czas_przebudzen').value,
-        czas_lezania_rano: document.getElementById('czas_lezania_rano').value,
-        drzemki: document.getElementById('drzemki').value,
+        drzemki_ilosc: document.getElementById('drzemki_ilosc').value || 0,
+        drzemki_dlugosc: document.getElementById('drzemki_dlugosc').value || 0,
+        obliczony_sen: calculateSleep(),
         jakosc_snu: document.getElementById('jakosc_snu').value,
         samopoczucie_rano: document.getElementById('samopoczucie_rano').value,
         samopoczucie_dzien: document.getElementById('samopoczucie_dzien').value,
