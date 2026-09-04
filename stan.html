@@ -1,1 +1,250 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dziennik Stanu i Napięcia</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="mobile-web-app-capable" content="yes">
+  
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    input, select { font-size: 16px !important; }
+    .btn-selected { background-color: #0f766e !important; color: #ffffff !important; border-color: #0f766e !important; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen p-3 flex justify-center items-center font-sans">
 
+  <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative my-2">
+    
+    <!-- Nagłówek -->
+    <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+      <div>
+        <span class="text-[10px] tracking-wider uppercase font-bold text-teal-600 block">Szybki Pomiar</span>
+        <h1 class="text-lg font-bold text-slate-800">Stan & Napięcie</h1>
+      </div>
+      <button onclick="toggleConfig()" class="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">⚙️ API</button>
+    </div>
+
+    <!-- Baner Błędów -->
+    <div id="errorBanner" class="hidden mb-3 p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium"></div>
+
+    <!-- Panel Konfiguracji API -->
+    <div id="configPanel" class="hidden mb-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+      <label class="block text-xs font-semibold mb-1 text-slate-700">URL Apps Script Webhook:</label>
+      <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs mb-2 text-slate-800">
+      <button onclick="saveConfig()" class="w-full bg-teal-700 text-white text-xs font-bold py-2 rounded-lg">Zapisz adres API</button>
+    </div>
+
+    <form id="stateForm" onsubmit="handleSubmit(event)" class="space-y-4">
+      
+      <!-- Datownik i Godzina -->
+      <div class="grid grid-cols-2 gap-2 bg-teal-50/50 p-2.5 rounded-xl border border-teal-100">
+        <div>
+          <label class="block text-[11px] font-semibold text-teal-900 mb-1">Data</label>
+          <input type="date" id="data_wpisu" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs text-slate-800">
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-teal-900 mb-1">Godzina pomiaru</label>
+          <input type="time" id="godzina_wpisu" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs text-slate-800">
+        </div>
+      </div>
+
+      <!-- 1. Tempo myślenia -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tempo myślenia</label>
+        <div class="grid grid-cols-4 gap-1.5" data-field="tempo_myslenia">
+          <button type="button" onclick="setVal('tempo_myslenia', 'normalne', this)" class="py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-700">Normalne</button>
+          <button type="button" onclick="setVal('tempo_myslenia', 'szybsze', this)" class="py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-700">Szybsze</button>
+          <button type="button" onclick="setVal('tempo_myslenia', 'wolniejsze', this)" class="py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-700">Wolniejsze</button>
+          <button type="button" onclick="setVal('tempo_myslenia', 'nie wiem', this)" class="py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-400">Nie wiem</button>
+        </div>
+        <input type="hidden" id="tempo_myslenia">
+      </div>
+
+      <!-- Skale 0-10 -->
+      <div class="space-y-3 pt-1 border-t border-slate-100">
+        <!-- Napięcie ciała -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-semibold text-slate-700">Napięcie ciała (0-10)</label>
+            <span id="lbl_napiecie_ciala" class="text-xs font-bold text-teal-700">Nie wiem</span>
+          </div>
+          <div class="flex gap-1 overflow-x-auto pb-1" data-scale="napiecie_ciala"></div>
+          <input type="hidden" id="napiecie_ciala" value="nie wiem">
+        </div>
+
+        <!-- Potrzeba dalszego działania -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-semibold text-slate-700">Potrzeba dalszego działania (0-10)</label>
+            <span id="lbl_potrzeba_dzialania" class="text-xs font-bold text-teal-700">Nie wiem</span>
+          </div>
+          <div class="flex gap-1 overflow-x-auto pb-1" data-scale="potrzeba_dzialania"></div>
+          <input type="hidden" id="potrzeba_dzialania" value="nie wiem">
+        </div>
+
+        <!-- Koncentracja -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-semibold text-slate-700">Koncentracja (0-10)</label>
+            <span id="lbl_koncentracja" class="text-xs font-bold text-teal-700">Nie wiem</span>
+          </div>
+          <div class="flex gap-1 overflow-x-auto pb-1" data-scale="koncentracja"></div>
+          <input type="hidden" id="koncentracja" value="nie wiem">
+        </div>
+      </div>
+
+      <!-- Pytania Binarne (Tak / Nie / Nie wiem) -->
+      <div class="space-y-2 pt-2 border-t border-slate-100">
+        
+        <script>
+          const binaryFields = [
+            { id: 'oczy_ciezkie', label: 'Oczy ciężkie / zamykają się' },
+            { id: 'ziewanie', label: 'Ziewanie' },
+            { id: 'ochota_lezec', label: 'Mam ochotę się położyć' },
+            { id: 'zmeczenie', label: 'Czuję zmęczenie' },
+            { id: 'sennosc', label: 'Czuję senność' }
+          ];
+
+          binaryFields.forEach(f => {
+            document.write(`
+              <div class="flex justify-between items-center py-1">
+                <span class="text-xs font-medium text-slate-700">${f.label}</span>
+                <div class="flex gap-1" data-field="${f.id}">
+                  <button type="button" onclick="setVal('${f.id}', 'tak', this)" class="px-2.5 py-1 text-xs font-medium bg-slate-50 border border-slate-200 rounded-md text-slate-700">Tak</button>
+                  <button type="button" onclick="setVal('${f.id}', 'nie', this)" class="px-2.5 py-1 text-xs font-medium bg-slate-50 border border-slate-200 rounded-md text-slate-700">Nie</button>
+                  <button type="button" onclick="setVal('${f.id}', 'nie wiem', this)" class="px-2.5 py-1 text-xs font-medium bg-slate-50 border border-slate-200 rounded-md text-slate-400">?</button>
+                </div>
+                <input type="hidden" id="${f.id}">
+              </div>
+            `);
+          });
+        </script>
+
+      </div>
+
+      <button type="submit" id="submitBtn" class="w-full mt-4 bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 rounded-xl transition shadow-sm text-sm">
+        Zapisz Pomiar
+      </button>
+    </form>
+  </div>
+
+  <script>
+    // Ustawienie aktualnej daty i godziny
+    const now = new Date();
+    document.getElementById('data_wpisu').value = now.toISOString().split('T')[0];
+    const hrs = String(now.getHours()).padStart(2, '0');
+    const mins = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('godzina_wpisu').value = `${hrs}:${mins}`;
+
+    // Generator skali 0-10 + Nie wiem
+    function buildScale(fieldId) {
+      const container = document.querySelector(`[data-scale="${fieldId}"]`);
+      if (!container) return;
+      
+      let html = `<button type="button" onclick="setScale('${fieldId}', 'nie wiem', this)" class="px-2 py-1.5 text-xs font-medium bg-slate-100 border border-slate-200 rounded-md text-slate-500 btn-selected">?</button>`;
+      
+      for (let i = 0; i <= 10; i++) {
+        html += `<button type="button" onclick="setScale('${fieldId}', ${i}, this)" class="flex-1 py-1.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-md text-slate-700">${i}</button>`;
+      }
+      container.innerHTML = html;
+    }
+
+    ['napiecie_ciala', 'potrzeba_dzialania', 'koncentracja'].forEach(buildScale);
+
+    function setScale(fieldId, val, btn) {
+      document.getElementById(fieldId).value = val;
+      document.getElementById(`lbl_${fieldId}`).innerText = val === 'nie wiem' ? 'Nie wiem' : val;
+      const container = document.querySelector(`[data-scale="${fieldId}"]`);
+      container.querySelectorAll('button').forEach(b => b.classList.remove('btn-selected'));
+      btn.classList.add('btn-selected');
+    }
+
+    function setVal(fieldId, val, btn) {
+      document.getElementById(fieldId).value = val;
+      const container = document.querySelector(`[data-field="${fieldId}"]`);
+      container.querySelectorAll('button').forEach(b => b.classList.remove('btn-selected'));
+      btn.classList.add('btn-selected');
+    }
+
+    const savedUrl = localStorage.getItem('apps_script_url');
+    if (savedUrl) {
+      document.getElementById('apiUrl').value = savedUrl;
+    } else {
+      document.getElementById('configPanel').classList.remove('hidden');
+    }
+
+    function toggleConfig() {
+      document.getElementById('configPanel').classList.toggle('hidden');
+    }
+
+    function saveConfig() {
+      const url = document.getElementById('apiUrl').value.trim();
+      localStorage.setItem('apps_script_url', url);
+      toggleConfig();
+      alert('Adres API został zapisany!');
+    }
+
+    function showError(msg) {
+      const banner = document.getElementById('errorBanner');
+      if (msg) {
+        banner.innerText = msg;
+        banner.classList.remove('hidden');
+      } else {
+        banner.innerText = '';
+        banner.classList.add('hidden');
+      }
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      showError('');
+
+      const apiUrl = localStorage.getItem('apps_script_url');
+      if (!apiUrl) {
+        showError('Najpierw skonfiguruj URL API w przycisku ⚙️ API na samej górze.');
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerText = 'Wysyłanie...';
+
+      const formData = {
+        form_type: "cognitive_state",
+        data_wpisu: document.getElementById('data_wpisu').value,
+        godzina_wpisu: document.getElementById('godzina_wpisu').value,
+        tempo_myslenia: document.getElementById('tempo_myslenia').value || 'nie wiem',
+        napiecie_ciala: document.getElementById('napiecie_ciala').value,
+        potrzeba_dzialania: document.getElementById('potrzeba_dzialania').value,
+        koncentracja: document.getElementById('koncentracja').value,
+        oczy_ciezkie: document.getElementById('oczy_ciezkie').value || 'nie wiem',
+        ziewanie: document.getElementById('ziewanie').value || 'nie wiem',
+        ochota_lezec: document.getElementById('ochota_lezec').value || 'nie wiem',
+        zmeczenie: document.getElementById('zmeczenie').value || 'nie wiem',
+        sennosc: document.getElementById('sennosc').value || 'nie wiem'
+      };
+
+      try {
+        await fetch(apiUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        alert('Pomiar zapisany pomyślnie!');
+        location.reload();
+      } catch (err) {
+        showError('Błąd podczas zapisywania: ' + err.toString());
+        btn.disabled = false;
+        btn.innerText = 'Zapisz Pomiar';
+      }
+    }
+  </script>
+</body>
+</html>
