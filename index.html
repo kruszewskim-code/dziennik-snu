@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dziennik Snu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    input, select, textarea { font-size: 16px !important; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen p-4 flex justify-center items-center font-sans">
+
+  <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-sm relative">
+    
+    <!-- Nagłówek -->
+    <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+      <div>
+        <span class="text-[10px] tracking-wider uppercase font-semibold text-slate-400 block">Codzienny Rytuał</span>
+        <h1 class="text-xl font-bold text-slate-800">Dziennik Snu</h1>
+      </div>
+      <button id="configBtn" onclick="toggleConfig()" class="text-xs font-medium text-slate-500 hover:text-slate-800 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 transition">⚙️ Ustawienia API</button>
+    </div>
+
+    <!-- Panel Konfiguracji URL -->
+    <div id="configPanel" class="hidden mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+      <label class="block text-xs font-semibold mb-1 text-slate-700">URL Apps Script Webhook:</label>
+      <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-xs mb-3 text-slate-800 focus:outline-none focus:border-slate-500">
+      <button onclick="saveConfig()" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2.5 rounded-lg transition">Zapisz adres API</button>
+    </div>
+
+    <!-- Formularz -->
+    <form id="sleepForm" onsubmit="handleSubmit(event)">
+      
+      <!-- Krok 1: Chronometraż -->
+      <div class="step" id="step1">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">1. Poranny Chronometraż</h2>
+          <span class="text-xs font-bold text-slate-400">Krok 1 z 3</span>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Data wpisu (domyślnie dzisiaj)</label>
+            <input type="date" id="data_wpisu" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none transition">
+          </div>
+          
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Pójście do łóżka</label>
+              <input type="time" id="godzina_bed" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Wstanie z łóżka</label>
+              <input type="time" id="godzina_wstania" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none transition">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Czas do zgaszenia (min)</label>
+              <input type="number" id="czas_zgaszenie" placeholder="np. 15" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Czas zasypiania (min)</label>
+              <input type="number" id="czas_zasypianie" placeholder="np. 30" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none transition">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Trudne przebudzenia</label>
+              <input type="number" id="trudne_przebudzenia" min="0" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Łączny czas wybudzeń (min)</label>
+              <input type="number" id="laczny_czas_przebudzen" placeholder="np. 10" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none transition">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Leżenie rano (min)</label>
+              <input type="number" id="czas_lezania_rano" placeholder="np. 20" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Drzemki w dzień (min)</label>
+              <input type="number" id="drzemki" min="0" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none transition">
+            </div>
+          </div>
+        </div>
+
+        <button type="button" onclick="nextStep(2)" class="w-full mt-6 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3.5 rounded-xl transition">Dalej &rarr;</button>
+      </div>
+
+      <!-- Krok 2: Subiektywne Oceny -->
+      <div class="step hidden" id="step2">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">2. Subiektywne Oceny (1-5)</h2>
+          <span class="text-xs font-bold text-slate-400">Krok 2 z 3</span>
+        </div>
+        
+        <div class="space-y-5">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-2">Jakość snu</label>
+            <div class="flex justify-between gap-2" data-rating="jakosc_snu">
+              <button type="button" onclick="setRating('jakosc_snu', 1)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">1</button>
+              <button type="button" onclick="setRating('jakosc_snu', 2)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">2</button>
+              <button type="button" onclick="setRating('jakosc_snu', 3)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">3</button>
+              <button type="button" onclick="setRating('jakosc_snu', 4)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">4</button>
+              <button type="button" onclick="setRating('jakosc_snu', 5)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">5</button>
+            </div>
+            <input type="hidden" id="jakosc_snu">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-2">Samopoczucie rano</label>
+            <div class="flex justify-between gap-2" data-rating="samopoczucie_rano">
+              <button type="button" onclick="setRating('samopoczucie_rano', 1)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">1</button>
+              <button type="button" onclick="setRating('samopoczucie_rano', 2)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">2</button>
+              <button type="button" onclick="setRating('samopoczucie_rano', 3)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">3</button>
+              <button type="button" onclick="setRating('samopoczucie_rano', 4)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">4</button>
+              <button type="button" onclick="setRating('samopoczucie_rano', 5)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">5</button>
+            </div>
+            <input type="hidden" id="samopoczucie_rano">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-2">Samopoczucie wczoraj w dzień</label>
+            <div class="flex justify-between gap-2" data-rating="samopoczucie_dzien">
+              <button type="button" onclick="setRating('samopoczucie_dzien', 1)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">1</button>
+              <button type="button" onclick="setRating('samopoczucie_dzien', 2)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">2</button>
+              <button type="button" onclick="setRating('samopoczucie_dzien', 3)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">3</button>
+              <button type="button" onclick="setRating('samopoczucie_dzien', 4)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">4</button>
+              <button type="button" onclick="setRating('samopoczucie_dzien', 5)" class="rate-btn flex-1 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition">5</button>
+            </div>
+            <input type="hidden" id="samopoczucie_dzien">
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <button type="button" onclick="nextStep(1)" class="w-1/3 bg-slate-100 hover:bg-slate-200 font-semibold text-slate-700 py-3.5 rounded-xl transition">&larr; Wstecz</button>
+          <button type="button" onclick="nextStep(3)" class="w-2/3 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3.5 rounded-xl transition">Dalej &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Krok 3: Czynniki Zewnętrzne i Środki Nasenne -->
+      <div class="step hidden" id="step3">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">3. Czynniki i Substancje</h2>
+          <span class="text-xs font-bold text-slate-400">Krok 3 z 3</span>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Aktywność fizyczna (rodzaj i pora)</label>
+            <input type="text" id="aktywnosc" placeholder="np. TT 19" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none transition">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Używki / Inne</label>
+            <input type="text" id="uzywki" value="Nie" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none transition">
+          </div>
+
+          <!-- Dynamiczne Środki Nasenne -->
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-2">Środki nasenne (zaznacz lub dodaj)</label>
+            <div id="medsContainer" class="flex flex-wrap gap-2 mb-2">
+              <!-- Kafelki będą generowane dynamicznie -->
+            </div>
+            
+            <div class="flex gap-2">
+              <input type="text" id="newMedInput" placeholder="Dodaj nowy lek..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none">
+              <button type="button" onclick="addNewMed()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition">+ Dodaj</button>
+            </div>
+          </div>
+
+          <!-- Pole Komentarz -->
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Komentarz / Uwagi do dnia</label>
+            <textarea id="komentarz" rows="2" placeholder="Opcjonalne uwagi..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-slate-400 focus:outline-none transition resize-none"></textarea>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <button type="button" onclick="nextStep(2)" class="w-1/3 bg-slate-100 hover:bg-slate-200 font-semibold text-slate-700 py-3.5 rounded-xl transition">&larr; Wstecz</button>
+          <button type="submit" id="submitBtn" class="w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl transition shadow-sm">Zapisz Wpis</button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <script>
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('data_wpisu').value = today;
+
+    // Obsługa pamięci leków
+    let defaultMeds = [
+      { name: "Melatonina", count: 1 },
+      { name: "Pramolan", count: 1 },
+      { name: "Dobroson 4mg", count: 0 },
+      { name: "Ketrel 25 mg", count: 0 }
+    ];
+
+    let userMeds = JSON.parse(localStorage.getItem('user_meds')) || defaultMeds;
+    let selectedMeds = new Set();
+
+    function renderMeds() {
+      // Sortowanie po częstotliwości użycia
+      userMeds.sort((a, b) => b.count - a.count);
+      const container = document.getElementById('medsContainer');
+      container.innerHTML = '';
+
+      userMeds.forEach(med => {
+        const isSelected = selectedMeds.has(med.name);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
+          isSelected 
+            ? 'bg-slate-800 text-white border-slate-800 shadow-sm' 
+            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-200'
+        }`;
+        btn.innerText = med.name;
+        btn.onclick = () => toggleMed(med.name);
+        container.appendChild(btn);
+      });
+    }
+
+    function toggleMed(medName) {
+      if (selectedMeds.has(medName)) {
+        selectedMeds.delete(medName);
+      } else {
+        selectedMeds.add(medName);
+      }
+      renderMeds();
+    }
+
+    function addNewMed() {
+      const input = document.getElementById('newMedInput');
+      const val = input.value.trim();
+      if (val && !userMeds.some(m => m.name.toLowerCase() === val.toLowerCase())) {
+        userMeds.push({ name: val, count: 0 });
+        selectedMeds.add(val);
+        localStorage.setItem('user_meds', JSON.stringify(userMeds));
+        input.value = '';
+        renderMeds();
+      }
+    }
+
+    renderMeds();
+
+    // Wczytanie Zapisanego API URL
+    const savedUrl = localStorage.getItem('apps_script_url');
+    if (savedUrl) {
+      document.getElementById('apiUrl').value = savedUrl;
+    } else {
+      document.getElementById('configPanel').classList.remove('hidden');
+    }
+
+    function toggleConfig() {
+      document.getElementById('configPanel').classList.toggle('hidden');
+    }
+
+    function saveConfig() {
+      const url = document.getElementById('apiUrl').value.trim();
+      localStorage.setItem('apps_script_url', url);
+      toggleConfig();
+      alert('Adres API został zapisany!');
+    }
+
+    function nextStep(stepNumber) {
+      document.querySelectorAll('.step').forEach(s => s.classList.add('hidden'));
+      document.getElementById(`step${stepNumber}`).classList.remove('hidden');
+    }
+
+    function setRating(fieldId, value) {
+      document.getElementById(fieldId).value = value;
+      const container = document.querySelector(`[data-rating="${fieldId}"]`);
+      container.querySelectorAll('.rate-btn').forEach((btn, idx) => {
+        if (idx + 1 === value) {
+          btn.classList.add('bg-slate-800', 'text-white');
+          btn.classList.remove('bg-slate-50', 'text-slate-700');
+        } else {
+          btn.classList.remove('bg-slate-800', 'text-white');
+          btn.classList.add('bg-slate-50', 'text-slate-700');
+        }
+      });
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const apiUrl = localStorage.getItem('apps_script_url');
+      if (!apiUrl) {
+        alert('Najpierw skonfiguruj URL API w przycisku ⚙️ Ustawienia API');
+        return;
+      }
+
+      // Zwiększenie liczników użytych leków i zapis do localStorage
+      selectedMeds.forEach(medName => {
+        const medObj = userMeds.find(m => m.name === medName);
+        if (medObj) medObj.count += 1;
+      });
+      localStorage.setItem('user_meds', JSON.stringify(userMeds));
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerText = 'Wysyłanie...';
+
+      const formData = {
+        data_wpisu: document.getElementById('data_wpisu').value,
+        godzina_bed: document.getElementById('godzina_bed').value,
+        godzina_wstania: document.getElementById('godzina_wstania').value,
+        czas_zgaszenie: document.getElementById('czas_zgaszenie').value,
+        czas_zasypianie: document.getElementById('czas_zasypianie').value,
+        trudne_przebudzenia: document.getElementById('trudne_przebudzenia').value,
+        laczny_czas_przebudzen: document.getElementById('laczny_czas_przebudzen').value,
+        czas_lezania_rano: document.getElementById('czas_lezania_rano').value,
+        drzemki: document.getElementById('drzemki').value,
+        jakosc_snu: document.getElementById('jakosc_snu').value,
+        samopoczucie_rano: document.getElementById('samopoczucie_rano').value,
+        samopoczucie_dzien: document.getElementById('samopoczucie_dzien').value,
+        aktywnosc: document.getElementById('aktywnosc').value,
+        uzywki: document.getElementById('uzywki').value,
+        srodki_nasenne: Array.from(selectedMeds).join(', ') || 'Brak',
+        komentarz: document.getElementById('komentarz').value
+      };
+
+      try {
+        await fetch(apiUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        alert('Wpis zapisany pomyślnie!');
+        location.reload();
+      } catch (err) {
+        alert('Błąd podczas zapisywania: ' + err.toString());
+        btn.disabled = false;
+        btn.innerText = 'Zapisz Wpis';
+      }
+    }
+  </script>
+</body>
+</html>
