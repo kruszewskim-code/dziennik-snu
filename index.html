@@ -178,9 +178,9 @@
             <input type="text" id="uzywki" value="Nie" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
           </div>
 
-          <!-- Moduł Leków z Edycją -->
+          <!-- Moduł Leków z Wielokrotnym Klikaniem (x1, x2, x3) -->
           <div>
-            <label class="block text-xs font-medium text-slate-600 mb-2">Środki nasenne (zaznacz, edytuj lub dodaj)</label>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Środki nasenne (klikaj wielokrotnie dla x2/x3)</label>
             <div id="medsContainer" class="flex flex-wrap gap-2 mb-2"></div>
             
             <div class="flex gap-2">
@@ -216,7 +216,8 @@
     ];
 
     let userMeds = JSON.parse(localStorage.getItem('user_meds')) || defaultMeds;
-    let selectedMeds = new Set();
+    // Mapowanie: nazwaLeku -> ilość dawki (1, 2, 3)
+    let selectedMeds = new Map();
 
     function renderMeds() {
       userMeds.sort((a, b) => b.count - a.count);
@@ -224,18 +225,19 @@
       container.innerHTML = '';
 
       userMeds.forEach((med, index) => {
-        const isSelected = selectedMeds.has(med.name);
+        const qty = selectedMeds.get(med.name) || 0;
+        const isSelected = qty > 0;
         
         const wrapper = document.createElement('div');
-        wrapper.className = `flex items-center gap-1 border rounded-lg px-2.5 py-1 transition ${
-          isSelected ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-200'
+        wrapper.className = `flex items-center gap-1 border rounded-lg px-2.5 py-1.5 transition select-none ${
+          isSelected ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-200'
         }`;
 
         const labelBtn = document.createElement('button');
         labelBtn.type = 'button';
         labelBtn.className = 'text-xs font-medium';
-        labelBtn.innerText = med.name;
-        labelBtn.onclick = () => toggleMed(med.name);
+        labelBtn.innerText = qty > 1 ? `${med.name} x${qty}` : med.name;
+        labelBtn.onclick = () => cycleMed(med.name);
 
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
@@ -252,11 +254,17 @@
       });
     }
 
-    function toggleMed(medName) {
-      if (selectedMeds.has(medName)) {
-        selectedMeds.delete(medName);
+    // Wielokrotne klikanie: 0 -> 1 -> 2 -> 3 -> 0
+    function cycleMed(medName) {
+      const current = selectedMeds.get(medName) || 0;
+      if (current === 0) {
+        selectedMeds.set(medName, 1);
+      } else if (current === 1) {
+        selectedMeds.set(medName, 2);
+      } else if (current === 2) {
+        selectedMeds.set(medName, 3);
       } else {
-        selectedMeds.add(medName);
+        selectedMeds.delete(medName);
       }
       renderMeds();
     }
@@ -265,19 +273,18 @@
       const oldName = userMeds[index].name;
       const newName = prompt("Edytuj nazwę leku (zostaw puste, aby usunąć):", oldName);
       
-      if (newName === null) return; // Anulowano
+      if (newName === null) return;
       
       const trimmed = newName.trim();
       if (trimmed === "") {
-        // Usuwanie leku
         userMeds.splice(index, 1);
         selectedMeds.delete(oldName);
       } else {
-        // Edycja nazwy
         userMeds[index].name = trimmed;
         if (selectedMeds.has(oldName)) {
+          const qty = selectedMeds.get(oldName);
           selectedMeds.delete(oldName);
-          selectedMeds.add(trimmed);
+          selectedMeds.set(trimmed, qty);
         }
       }
       
@@ -290,7 +297,7 @@
       const val = input.value.trim();
       if (val && !userMeds.some(m => m.name.toLowerCase() === val.toLowerCase())) {
         userMeds.push({ name: val, count: 0 });
-        selectedMeds.add(val);
+        selectedMeds.set(val, 1);
         localStorage.setItem('user_meds', JSON.stringify(userMeds));
         input.value = '';
         renderMeds();
@@ -316,7 +323,7 @@
       let t1 = h1 * 60 + m1;
       let t2 = h2 * 60 + m2;
 
-      if (t2 <= t1) t2 += 24 * 60; // Przejście przez północ
+      if (t2 <= t1) t2 += 24 * 60;
 
       let totalInBed = t2 - t1;
       let actualSleep = totalInBed - zasypianie - lezenie;
@@ -329,6 +336,14 @@
       const resultText = `${hours} h ${minutes} min`;
       output.innerText = resultText;
       return resultText;
+    }
+
+    // Pomocnicza funkcja dodająca minuty przed wysyłką
+    function formatMinStr(val) {
+      if (val === "" || val === null || val === undefined) return "0 min";
+      const num = parseInt(val, 10);
+      if (isNaN(num)) return "0 min";
+      return num + " min";
     }
 
     renderMeds();
@@ -442,11 +457,22 @@
         return;
       }
 
-      selectedMeds.forEach(medName => {
+      // Aktualizacja liczników użycia
+      selectedMeds.forEach((qty, medName) => {
         const medObj = userMeds.find(m => m.name === medName);
-        if (medObj) medObj.count += 1;
+        if (medObj) medObj.count += qty;
       });
       localStorage.setItem('user_meds', JSON.stringify(userMeds));
+
+      // Tworzenie ciągu tekstowego leków z mnożnikami
+      let medsArray = [];
+      selectedMeds.forEach((qty, medName) => {
+        if (qty > 1) {
+          medsArray.push(`${medName} x${qty}`);
+        } else {
+          medsArray.push(medName);
+        }
+      });
 
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
@@ -456,20 +482,20 @@
         data_wpisu: document.getElementById('data_wpisu').value,
         godzina_bed: document.getElementById('godzina_bed').value,
         godzina_zgaszenia: document.getElementById('godzina_zgaszenia').value,
-        czas_zasypianie: document.getElementById('czas_zasypianie').value || 0,
+        czas_zasypianie: formatMinStr(document.getElementById('czas_zasypianie').value),
         trudne_przebudzenia: document.getElementById('trudne_przebudzenia').value || 0,
-        laczny_czas_przebudzen: document.getElementById('laczny_czas_przebudzen').value || 0,
-        czas_lezania_rano: document.getElementById('czas_lezania_rano').value || 0,
+        laczny_czas_przebudzen: formatMinStr(document.getElementById('laczny_czas_przebudzen').value),
+        czas_lezania_rano: formatMinStr(document.getElementById('czas_lezania_rano').value),
         godzina_wstania: document.getElementById('godzina_wstania').value,
         drzemki_ilosc: document.getElementById('drzemki_ilosc').value || 0,
-        drzemki_dlugosc: document.getElementById('drzemki_dlugosc').value || 0,
+        drzemki_dlugosc: formatMinStr(document.getElementById('drzemki_dlugosc').value),
         obliczony_sen: calculateSleep(),
         jakosc_snu: document.getElementById('jakosc_snu').value,
         samopoczucie_rano: document.getElementById('samopoczucie_rano').value,
         samopoczucie_dzien: document.getElementById('samopoczucie_dzien').value,
         aktywnosc: document.getElementById('aktywnosc').value,
         uzywki: document.getElementById('uzywki').value,
-        srodki_nasenne: Array.from(selectedMeds).join(', ') || 'Brak',
+        srodki_nasenne: medsArray.join(', ') || 'Brak',
         komentarz: document.getElementById('komentarz').value
       };
 
