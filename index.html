@@ -6,7 +6,7 @@
   <title>Dziennik Snu</title>
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Połączenie z Manifestem PWA i Ikoną -->
+  <!-- Manifest i Ikona PWA -->
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
@@ -84,7 +84,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-medium text-slate-600 mb-1">5. Łączny czas wybudzeń (min)</label>
-              <input type="number" id="laczny_czas_przebudzen" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
+              <input type="number" id="laczny_czas_przebudzen" placeholder="0" oninput="calculateSleep()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none transition">
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-600 mb-1">6. Leżenie rano (min)</label>
@@ -313,10 +313,12 @@
       }
     }
 
+    // PRAWIDŁOWA FORMUŁA TST (Total Sleep Time): Czas w łóżku - Zasypianie - Przebudzenia - Leżenie rano
     function calculateSleep() {
       const zgaszenie = document.getElementById('godzina_zgaszenia').value;
       const wstanie = document.getElementById('godzina_wstania').value;
       const zasypianie = parseFloat(document.getElementById('czas_zasypianie').value) || 0;
+      const przebudzenia = parseFloat(document.getElementById('laczny_czas_przebudzen').value) || 0;
       const lezenie = parseFloat(document.getElementById('czas_lezania_rano').value) || 0;
 
       const output = document.getElementById('calculatedSleepText');
@@ -332,10 +334,10 @@
       let t1 = h1 * 60 + m1;
       let t2 = h2 * 60 + m2;
 
-      if (t2 <= t1) t2 += 24 * 60;
+      if (t2 <= t1) t2 += 24 * 60; // Przejście przez północ
 
       let totalInBed = t2 - t1;
-      let actualSleep = totalInBed - zasypianie - lezenie;
+      let actualSleep = totalInBed - zasypianie - przebudzenia - lezenie;
 
       if (actualSleep < 0) actualSleep = 0;
 
