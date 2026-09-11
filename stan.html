@@ -53,7 +53,7 @@
         </div>
       </div>
 
-      <!-- 1. Tempo myślenia -->
+      <!-- Tempo myślenia -->
       <div>
         <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tempo myślenia</label>
         <div class="grid grid-cols-4 gap-1.5" data-field="tempo_myslenia">
@@ -65,51 +65,22 @@
         <input type="hidden" id="tempo_myslenia">
       </div>
 
-      <!-- Skale 0-10 -->
-      <div class="space-y-3 pt-1 border-t border-slate-100">
-        <!-- Napięcie ciała -->
-        <div>
-          <div class="flex justify-between items-center mb-1">
-            <label class="text-xs font-semibold text-slate-700">Napięcie ciała (0-10)</label>
-            <span id="lbl_napiecie_ciala" class="text-xs font-bold text-teal-700">Nie wiem</span>
-          </div>
-          <div class="flex gap-1 overflow-x-auto pb-1" data-scale="napiecie_ciala"></div>
-          <input type="hidden" id="napiecie_ciala" value="nie wiem">
-        </div>
-
-        <!-- Potrzeba dalszego działania -->
-        <div>
-          <div class="flex justify-between items-center mb-1">
-            <label class="text-xs font-semibold text-slate-700">Potrzeba dalszego działania (0-10)</label>
-            <span id="lbl_potrzeba_dzialania" class="text-xs font-bold text-teal-700">Nie wiem</span>
-          </div>
-          <div class="flex gap-1 overflow-x-auto pb-1" data-scale="potrzeba_dzialania"></div>
-          <input type="hidden" id="potrzeba_dzialania" value="nie wiem">
-        </div>
-
-        <!-- Koncentracja -->
-        <div>
-          <div class="flex justify-between items-center mb-1">
-            <label class="text-xs font-semibold text-slate-700">Koncentracja (0-10)</label>
-            <span id="lbl_koncentracja" class="text-xs font-bold text-teal-700">Nie wiem</span>
-          </div>
-          <div class="flex gap-1 overflow-x-auto pb-1" data-scale="koncentracja"></div>
-          <input type="hidden" id="koncentracja" value="nie wiem">
-        </div>
-      </div>
-
-      <!-- Pytania Binarne -->
+      <!-- Lista Wyborów Tak / Nie / ? -->
       <div class="space-y-2 pt-2 border-t border-slate-100">
         <script>
-          const binaryFields = [
+          const fields = [
+            { id: 'napiecie_ciala', label: 'Napięcie ciała' },
+            { id: 'potrzeba_dzialania', label: 'Potrzeba dalszego działania' },
+            { id: 'koncentracja', label: 'Dobra koncentracja' },
             { id: 'oczy_ciezkie', label: 'Oczy ciężkie / zamykają się' },
             { id: 'ziewanie', label: 'Ziewanie' },
             { id: 'ochota_lezec', label: 'Mam ochotę się położyć' },
             { id: 'zmeczenie', label: 'Czuję zmęczenie' },
-            { id: 'sennosc', label: 'Czuję senność' }
+            { id: 'sennosc', label: 'Czuję senność' },
+            { id: 'frustracja_bezsens', label: 'Frustracja / Poczucie bezsensu' }
           ];
 
-          binaryFields.forEach(f => {
+          fields.forEach(f => {
             document.write(`
               <div class="flex justify-between items-center py-1">
                 <span class="text-xs font-medium text-slate-700">${f.label}</span>
@@ -125,7 +96,7 @@
         </script>
       </div>
 
-      <!-- Komentarz / Uwagi -->
+      <!-- Komentarz -->
       <div class="pt-2 border-t border-slate-100">
         <label class="block text-xs font-semibold text-slate-700 mb-1">Komentarz / Uwagi (opcjonalnie)</label>
         <textarea id="komentarz" rows="2" placeholder="Wpisz dodatkowe obserwacje..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none transition resize-none"></textarea>
@@ -143,28 +114,6 @@
     const hrs = String(now.getHours()).padStart(2, '0');
     const mins = String(now.getMinutes()).padStart(2, '0');
     document.getElementById('godzina_wpisu').value = `${hrs}:${mins}`;
-
-    function buildScale(fieldId) {
-      const container = document.querySelector(`[data-scale="${fieldId}"]`);
-      if (!container) return;
-      
-      let html = `<button type="button" onclick="setScale('${fieldId}', 'nie wiem', this)" class="px-2 py-1.5 text-xs font-medium bg-slate-100 border border-slate-200 rounded-md text-slate-500 btn-selected">?</button>`;
-      
-      for (let i = 0; i <= 10; i++) {
-        html += `<button type="button" onclick="setScale('${fieldId}', ${i}, this)" class="flex-1 py-1.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-md text-slate-700">${i}</button>`;
-      }
-      container.innerHTML = html;
-    }
-
-    ['napiecie_ciala', 'potrzeba_dzialania', 'koncentracja'].forEach(buildScale);
-
-    function setScale(fieldId, val, btn) {
-      document.getElementById(fieldId).value = val;
-      document.getElementById(`lbl_${fieldId}`).innerText = val === 'nie wiem' ? 'Nie wiem' : val;
-      const container = document.querySelector(`[data-scale="${fieldId}"]`);
-      container.querySelectorAll('button').forEach(b => b.classList.remove('btn-selected'));
-      btn.classList.add('btn-selected');
-    }
 
     function setVal(fieldId, val, btn) {
       document.getElementById(fieldId).value = val;
@@ -221,14 +170,15 @@
         data_wpisu: document.getElementById('data_wpisu').value,
         godzina_wpisu: document.getElementById('godzina_wpisu').value,
         tempo_myslenia: document.getElementById('tempo_myslenia').value || 'nie wiem',
-        napiecie_ciala: document.getElementById('napiecie_ciala').value,
-        potrzeba_dzialania: document.getElementById('potrzeba_dzialania').value,
-        koncentracja: document.getElementById('koncentracja').value,
+        napiecie_ciala: document.getElementById('napiecie_ciala').value || 'nie wiem',
+        potrzeba_dzialania: document.getElementById('potrzeba_dzialania').value || 'nie wiem',
+        koncentracja: document.getElementById('koncentracja').value || 'nie wiem',
         oczy_ciezkie: document.getElementById('oczy_ciezkie').value || 'nie wiem',
         ziewanie: document.getElementById('ziewanie').value || 'nie wiem',
         ochota_lezec: document.getElementById('ochota_lezec').value || 'nie wiem',
         zmeczenie: document.getElementById('zmeczenie').value || 'nie wiem',
         sennosc: document.getElementById('sennosc').value || 'nie wiem',
+        frustracja_bezsens: document.getElementById('frustracja_bezsens').value || 'nie wiem',
         komentarz: document.getElementById('komentarz').value.trim()
       };
 
