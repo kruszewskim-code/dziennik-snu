@@ -69,7 +69,6 @@
       <div class="space-y-2 pt-2 border-t border-slate-100">
         <script>
           const fields = [
-            { id: 'napiecie_ciala', label: 'Napięcie ciała' },
             { id: 'potrzeba_dzialania', label: 'Potrzeba dalszego działania' },
             { id: 'koncentracja', label: 'Dobra koncentracja' },
             { id: 'oczy_ciezkie', label: 'Oczy ciężkie / zamykają się' },
@@ -77,7 +76,10 @@
             { id: 'ochota_lezec', label: 'Mam ochotę się położyć' },
             { id: 'zmeczenie', label: 'Czuję zmęczenie' },
             { id: 'sennosc', label: 'Czuję senność' },
-            { id: 'frustracja_bezsens', label: 'Frustracja / Poczucie bezsensu' }
+            { id: 'frustracja_bezsens', label: 'Frustracja / Poczucie bezsensu' },
+            { id: 'ochota_slodycze', label: 'Ochota na słodycze / podjadanie' },
+            { id: 'irytacja_ludzie', label: 'Irytacja na ludzi / brak cierpliwości' },
+            { id: 'ciewosc_glowy', label: 'Ciężkość / ćmienie w głowie' }
           ];
 
           fields.forEach(f => {
@@ -170,7 +172,6 @@
         data_wpisu: document.getElementById('data_wpisu').value,
         godzina_wpisu: document.getElementById('godzina_wpisu').value,
         tempo_myslenia: document.getElementById('tempo_myslenia').value || 'nie wiem',
-        napiecie_ciala: document.getElementById('napiecie_ciala').value || 'nie wiem',
         potrzeba_dzialania: document.getElementById('potrzeba_dzialania').value || 'nie wiem',
         koncentracja: document.getElementById('koncentracja').value || 'nie wiem',
         oczy_ciezkie: document.getElementById('oczy_ciezkie').value || 'nie wiem',
@@ -179,6 +180,9 @@
         zmeczenie: document.getElementById('zmeczenie').value || 'nie wiem',
         sennosc: document.getElementById('sennosc').value || 'nie wiem',
         frustracja_bezsens: document.getElementById('frustracja_bezsens').value || 'nie wiem',
+        ochota_slodycze: document.getElementById('ochota_slodycze').value || 'nie wiem',
+        irytacja_ludzie: document.getElementById('irytacja_ludzie').value || 'nie wiem',
+        ciewosc_glowy: document.getElementById('ciewosc_glowy').value || 'nie wiem',
         komentarz: document.getElementById('komentarz').value.trim()
       };
 
