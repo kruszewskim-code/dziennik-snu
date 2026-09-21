@@ -1,0 +1,16 @@
+{
+  "name": "Log Faktów",
+  "short_name": "Log Faktów",
+  "start_url": "./fakty.html",
+  "display": "standalone",
+  "background_color": "#1e40af",
+  "theme_color": "#1e40af",
+  "icons": [
+    {
+      "src": "icon-fakty.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
