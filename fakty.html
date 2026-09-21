@@ -57,16 +57,16 @@
         </div>
       </div>
 
-      <!-- Kategoria -->
+      <!-- Dynamiczny Moduł Kategorii -->
       <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Kontekst / Kategoria</label>
-        <div class="grid grid-cols-4 gap-1.5" data-field="kategoria">
-          <button type="button" onclick="setVal('kategoria', 'Praca', this)" class="py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-700 btn-selected">Praca</button>
-          <button type="button" onclick="setVal('kategoria', 'Trening / Sport', this)" class="py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-700">Sport</button>
-          <button type="button" onclick="setVal('kategoria', 'Dom / Codzienność', this)" class="py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-700">Dom</button>
-          <button type="button" onclick="setVal('kategoria', 'Relacje / Inne', this)" class="py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-700">Relacje</button>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Kontekst / Kategoria (kliknij ✏️ aby edytować/usunąć)</label>
+        <div id="categoriesContainer" class="flex flex-wrap gap-1.5 mb-2"></div>
+        
+        <div class="flex gap-2">
+          <input type="text" id="newCatInput" placeholder="Dodaj własną kategorię..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:bg-white focus:outline-none">
+          <button type="button" onclick="addNewCategory()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl transition">+ Dodaj</button>
         </div>
-        <input type="hidden" id="kategoria" value="Praca">
+        <input type="hidden" id="selected_kategoria">
       </div>
 
       <!-- Pole Wprowadzania Faktu -->
@@ -79,7 +79,7 @@
       <div id="holdTimerBox" class="hidden p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
         <span class="text-xs font-semibold text-amber-900 block mb-1">⏱️ Czas Zatrzymania (Przebudowa połączeń)</span>
         <span id="timerText" class="text-2xl font-extrabold text-amber-700">10s</span>
-        <p class="text-[10px] text-amber-800 mt-1">Utrzymaj uwagę na tym fakcie. Nie musisz czuć euforii – chodzi o sam fizyczny czas przebywania procesora w obszarze informacji dodatniej.</p>
+        <p class="text-[10px] text-amber-800 mt-1">Utrzymaj uwagę na tym fakcie. Chodzi o sam fizyczny czas przebywania procesora w obszarze informacji dodatniej.</p>
       </div>
 
       <button type="submit" id="submitBtn" class="w-full mt-2 bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 rounded-xl transition shadow-sm text-sm">
@@ -95,12 +95,87 @@
     const mins = String(now.getMinutes()).padStart(2, '0');
     document.getElementById('godzina_wpisu').value = `${hrs}:${mins}`;
 
-    function setVal(fieldId, val, btn) {
-      document.getElementById(fieldId).value = val;
-      const container = document.querySelector(`[data-field="${fieldId}"]`);
-      container.querySelectorAll('button').forEach(b => b.classList.remove('btn-selected'));
-      btn.classList.add('btn-selected');
+    // Domyślne kategorie
+    let defaultCategories = ["Praca", "Sport", "Dom", "Relacje"];
+    let userCategories = JSON.parse(localStorage.getItem('user_categories')) || defaultCategories;
+    let selectedCategory = userCategories[0] || "Praca";
+
+    function renderCategories() {
+      const container = document.getElementById('categoriesContainer');
+      container.innerHTML = '';
+
+      userCategories.forEach((cat, index) => {
+        const isSelected = (cat === selectedCategory);
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = `flex items-center gap-1 border rounded-lg px-2.5 py-1.5 transition select-none ${
+          isSelected ? 'bg-blue-700 text-white border-blue-700 shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-200'
+        }`;
+
+        const labelBtn = document.createElement('button');
+        labelBtn.type = 'button';
+        labelBtn.className = 'text-xs font-medium';
+        labelBtn.innerText = cat;
+        labelBtn.onclick = () => selectCategory(cat);
+
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = `text-[10px] opacity-60 hover:opacity-100 ml-1 ${isSelected ? 'text-blue-100' : 'text-slate-500'}`;
+        editBtn.innerText = '✏️';
+        editBtn.onclick = (e) => {
+          e.stopPropagation();
+          editCategory(index);
+        };
+
+        wrapper.appendChild(labelBtn);
+        wrapper.appendChild(editBtn);
+        container.appendChild(wrapper);
+      });
+
+      document.getElementById('selected_kategoria').value = selectedCategory;
     }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      renderCategories();
+    }
+
+    function editCategory(index) {
+      const oldCat = userCategories[index];
+      const newCat = prompt("Edytuj nazwę kategorii (zostaw puste, aby usunąć):", oldCat);
+      
+      if (newCat === null) return;
+      
+      const trimmed = newCat.trim();
+      if (trimmed === "") {
+        userCategories.splice(index, 1);
+        if (selectedCategory === oldCat) {
+          selectedCategory = userCategories[0] || "";
+        }
+      } else {
+        userCategories[index] = trimmed;
+        if (selectedCategory === oldCat) {
+          selectedCategory = trimmed;
+        }
+      }
+      
+      localStorage.setItem('user_categories', JSON.stringify(userCategories));
+      renderCategories();
+    }
+
+    function addNewCategory() {
+      const input = document.getElementById('newCatInput');
+      const val = input.value.trim();
+      if (val && !userCategories.some(c => c.toLowerCase() === val.toLowerCase())) {
+        userCategories.push(val);
+        selectedCategory = val;
+        localStorage.setItem('user_categories', JSON.stringify(userCategories));
+        input.value = '';
+        renderCategories();
+      }
+    }
+
+    renderCategories();
 
     const savedUrl = localStorage.getItem('apps_script_url');
     if (savedUrl) {
@@ -181,7 +256,7 @@
         form_type: "facts_log",
         data_wpisu: document.getElementById('data_wpisu').value,
         godzina_wpisu: document.getElementById('godzina_wpisu').value,
-        kategoria: document.getElementById('kategoria').value,
+        kategoria: document.getElementById('selected_kategoria').value || 'Praca',
         fakt_opis: faktOpis
       };
 
