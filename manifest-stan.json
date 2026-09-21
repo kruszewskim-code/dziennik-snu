@@ -1,0 +1,16 @@
+{
+  "name": "Stan & Napięcie",
+  "short_name": "Stan & Napięcie",
+  "start_url": "./stan.html",
+  "display": "standalone",
+  "background_color": "#0f766e",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "icon-stan.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
