@@ -6,9 +6,13 @@
   <title>Log Faktów</title>
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
+  <!-- Dedykowana PWA Konfiguracja i Ikona -->
+  <link rel="manifest" href="manifest-fakty.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-fakty.png">
+  <link rel="apple-touch-icon" href="icon-fakty.png">
   <meta name="theme-color" content="#1e40af">
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <style>
     body { -webkit-tap-highlight-color: transparent; }
@@ -75,7 +79,7 @@
       <div id="holdTimerBox" class="hidden p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
         <span class="text-xs font-semibold text-amber-900 block mb-1">⏱️ Czas Zatrzymania (Przebudowa połączeń)</span>
         <span id="timerText" class="text-2xl font-extrabold text-amber-700">10s</span>
-        <p class="text-[10px] text-amber-800 mt-1">Utrzymaj uwagę na tym fakcie. Nie musisz czuć euforii – chodzi o czas procesora w obszarze dodatnim.</p>
+        <p class="text-[10px] text-amber-800 mt-1">Utrzymaj uwagę na tym fakcie. Nie musisz czuć euforii – chodzi o sam fizyczny czas przebywania procesora w obszarze informacji dodatniej.</p>
       </div>
 
       <button type="submit" id="submitBtn" class="w-full mt-2 bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 rounded-xl transition shadow-sm text-sm">
@@ -171,7 +175,6 @@
       btn.disabled = true;
       btn.innerText = 'Zapisywanie...';
 
-      // Odliczenie 10 sekund zatrzymania uwagi
       await startHoldTimer();
 
       const formData = {
