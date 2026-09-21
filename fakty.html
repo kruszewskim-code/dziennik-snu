@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Log Faktów</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
+  <meta name="theme-color" content="#1e40af">
+  <meta name="mobile-web-app-capable" content="yes">
+  
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    input, select, textarea { font-size: 16px !important; }
+    .btn-selected { background-color: #1e40af !important; color: #ffffff !important; border-color: #1e40af !important; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen p-3 flex justify-center items-center font-sans">
+
+  <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative my-2">
+    
+    <!-- Nagłówek -->
+    <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+      <div>
+        <span class="text-[10px] tracking-wider uppercase font-bold text-blue-700 block">Rejestracja Wzorców</span>
+        <h1 class="text-lg font-bold text-slate-800">Log Faktów</h1>
+      </div>
+      <button onclick="toggleConfig()" class="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">⚙️ API</button>
+    </div>
+
+    <!-- Baner Błędów -->
+    <div id="errorBanner" class="hidden mb-3 p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium"></div>
+
+    <!-- Panel Konfiguracji API -->
+    <div id="configPanel" class="hidden mb-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+      <label class="block text-xs font-semibold mb-1 text-slate-700">URL Apps Script Webhook:</label>
+      <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs mb-2 text-slate-800">
+      <button onclick="saveConfig()" class="w-full bg-blue-700 text-white text-xs font-bold py-2 rounded-lg">Zapisz adres API</button>
+    </div>
+
+    <form id="factsForm" onsubmit="handleSubmit(event)" class="space-y-4">
+      
+      <!-- Datownik i Godzina -->
+      <div class="grid grid-cols-2 gap-2 bg-blue-50/60 p-2.5 rounded-xl border border-blue-100">
+        <div>
+          <label class="block text-[11px] font-semibold text-blue-900 mb-1">Data</label>
+          <input type="date" id="data_wpisu" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs text-slate-800">
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-blue-900 mb-1">Godzina</label>
+          <input type="time" id="godzina_wpisu" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs text-slate-800">
+        </div>
+      </div>
+
+      <!-- Kategoria -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Kontekst / Kategoria</label>
+        <div class="grid grid-cols-4 gap-1.5" data-field="kategoria">
+          <button type="button" onclick="setVal('kategoria', 'Praca', this)" class="py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-700 btn-selected">Praca</button>
+          <button type="button" onclick="setVal('kategoria', 'Trening / Sport', this)" class="py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-700">Sport</button>
+          <button type="button" onclick="setVal('kategoria', 'Dom / Codzienność', this)" class="py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-700">Dom</button>
+          <button type="button" onclick="setVal('kategoria', 'Relacje / Inne', this)" class="py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg text-slate-700">Relacje</button>
+        </div>
+        <input type="hidden" id="kategoria" value="Praca">
+      </div>
+
+      <!-- Pole Wprowadzania Faktu -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Obiektywny Fakt (dodatni lub neutralny)*</label>
+        <textarea id="fakt_opis" rows="3" required placeholder="np. Raport zaakceptowany w pierwszym podejściu, Trasa pokonana 10 min szybciej, Dobra kawa..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:bg-white focus:outline-none transition resize-none"></textarea>
+      </div>
+
+      <!-- Mikrostoper 10 sekund zatrzymania -->
+      <div id="holdTimerBox" class="hidden p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
+        <span class="text-xs font-semibold text-amber-900 block mb-1">⏱️ Czas Zatrzymania (Przebudowa połączeń)</span>
+        <span id="timerText" class="text-2xl font-extrabold text-amber-700">10s</span>
+        <p class="text-[10px] text-amber-800 mt-1">Utrzymaj uwagę na tym fakcie. Nie musisz czuć euforii – chodzi o czas procesora w obszarze dodatnim.</p>
+      </div>
+
+      <button type="submit" id="submitBtn" class="w-full mt-2 bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 rounded-xl transition shadow-sm text-sm">
+        Zapisz Fakt
+      </button>
+    </form>
+  </div>
+
+  <script>
+    const now = new Date();
+    document.getElementById('data_wpisu').value = now.toISOString().split('T')[0];
+    const hrs = String(now.getHours()).padStart(2, '0');
+    const mins = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('godzina_wpisu').value = `${hrs}:${mins}`;
+
+    function setVal(fieldId, val, btn) {
+      document.getElementById(fieldId).value = val;
+      const container = document.querySelector(`[data-field="${fieldId}"]`);
+      container.querySelectorAll('button').forEach(b => b.classList.remove('btn-selected'));
+      btn.classList.add('btn-selected');
+    }
+
+    const savedUrl = localStorage.getItem('apps_script_url');
+    if (savedUrl) {
+      document.getElementById('apiUrl').value = savedUrl;
+    } else {
+      document.getElementById('configPanel').classList.remove('hidden');
+    }
+
+    function toggleConfig() {
+      document.getElementById('configPanel').classList.toggle('hidden');
+    }
+
+    function saveConfig() {
+      const url = document.getElementById('apiUrl').value.trim();
+      localStorage.setItem('apps_script_url', url);
+      toggleConfig();
+      alert('Adres API został zapisany!');
+    }
+
+    function showError(msg) {
+      const banner = document.getElementById('errorBanner');
+      if (msg) {
+        banner.innerText = msg;
+        banner.classList.remove('hidden');
+      } else {
+        banner.innerText = '';
+        banner.classList.add('hidden');
+      }
+    }
+
+    function startHoldTimer() {
+      return new Promise((resolve) => {
+        const timerBox = document.getElementById('holdTimerBox');
+        const timerText = document.getElementById('timerText');
+        timerBox.classList.remove('hidden');
+
+        let timeLeft = 10;
+        timerText.innerText = `${timeLeft}s`;
+
+        const interval = setInterval(() => {
+          timeLeft--;
+          if (timeLeft > 0) {
+            timerText.innerText = `${timeLeft}s`;
+          } else {
+            clearInterval(interval);
+            timerText.innerText = "✓ Gotowe!";
+            setTimeout(() => {
+              resolve();
+            }, 500);
+          }
+        }, 1000);
+      });
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      showError('');
+
+      const faktOpis = document.getElementById('fakt_opis').value.trim();
+      if (!faktOpis) {
+        showError('Wpisz treść faktu.');
+        return;
+      }
+
+      const apiUrl = localStorage.getItem('apps_script_url');
+      if (!apiUrl) {
+        showError('Najpierw skonfiguruj URL API w przycisku ⚙️ API na samej górze.');
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerText = 'Zapisywanie...';
+
+      // Odliczenie 10 sekund zatrzymania uwagi
+      await startHoldTimer();
+
+      const formData = {
+        form_type: "facts_log",
+        data_wpisu: document.getElementById('data_wpisu').value,
+        godzina_wpisu: document.getElementById('godzina_wpisu').value,
+        kategoria: document.getElementById('kategoria').value,
+        fakt_opis: faktOpis
+      };
+
+      try {
+        await fetch(apiUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        alert('Fakt zarejestrowany pomyślnie!');
+        location.reload();
+      } catch (err) {
+        showError('Błąd podczas zapisywania: ' + err.toString());
+        btn.disabled = false;
+        btn.innerText = 'Zapisz Fakt';
+        document.getElementById('holdTimerBox').classList.add('hidden');
+      }
+    }
+  </script>
+</body>
+</html>
